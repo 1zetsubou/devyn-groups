@@ -25,6 +25,20 @@ $(document).on('click', '.btn-menu', function(e){
     currentMenu = "main";
 });
 
+$(document).on('click', '.btn-create', function(e){
+    e.preventDefault();
+    $(".groups-"+currentMenu).fadeOut(0);
+    $(".groups-group").fadeIn(200);
+    currentMenu = "group";
+});
+
+$(document).on('click', '.btn-join', function(e){
+    e.preventDefault();
+    $(".groups-"+currentMenu).fadeOut(0);
+    $(".groups-list").fadeIn(200);
+    currentMenu = "list";
+});
+
 document.onkeyup = function (event) {
     event = event || window.event;
     if (event.key == "Escape") {

@@ -7,7 +7,7 @@ end)
 function openGroupMenu()
     SendNUIMessage({
         action = "open",
-        menu = "list"
+        menu = "main"
     })
     SetNuiFocus(true, true)
 end
