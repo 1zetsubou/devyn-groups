@@ -21,12 +21,21 @@
     padding-top: 50px;
 }
 
+.req-btn, .menu-btn, .leave-btn {
+    display: none;
+}
+
 .groups-main {
     display: none;
     padding-top: 25px;
 }
 
 .groups-list {
+    display: none;
+    padding-top: 25px;
+}
+
+.groups-requests {
     display: none;
     padding-top: 25px;
 }

@@ -12,24 +12,67 @@ function openGroupMenu()
     SetNuiFocus(true, true)
 end
 
+
 RegisterNUICallback('close', function()
     SetNuiFocus(false, false)
 end)
 
-RegisterNUICallback('request-group', function()
+RegisterNUICallback('group-create', function()
     local request = promise.new()
-    QBCore.Function.TriggerCallback("groups:requestCreateGroup", function(result)
+    QBCore.Functions.TriggerCallback("groups:requestCreateGroup", function(result)
         request:resolve(result)
     end)
-    Citizen.Await(request)
+
+    local data = Citizen.Await(request)
+
+    if data then
+        SendNUIMessage({
+            action = "group-create",
+            groupID =  data.groupID,
+            name =  data.name,
+        })
+    else 
+        print("no")
+    end
+end)
+
+RegisterNUICallback('request-group', function()
+    local request = promise.new()
+    QBCore.Functions.TriggerCallback("groups:requestCreateGroup", function(result)
+        request:resolve(result)
+    end)
+    local data = Citizen.Await(request)
     
-    if request then 
+    if data then 
 
     else 
 
     end
 end)
 
-RegisterNUICallback('request-join', function()
-    
+RegisterNUICallback('getActiveGroups', function(data, cb)
+    local request = promise.new()
+    QBCore.Functions.TriggerCallback("groups:getActiveGroups", function(result)
+        request:resolve(result)
+    end)
+    local data = Citizen.Await(request)
+    cb(data)
+end)
+
+RegisterNUICallback('request-join', function(data, cb)
+    local request = promise.new()
+    QBCore.Functions.TriggerCallback("groups:requestJoinGroup", function(result)
+        request:resolve(result)
+    end, data.groupID)
+    local data = Citizen.Await(request)
+    cb(data)
+end)
+
+RegisterNUICallback('view-requests', function(data, cb)
+    local request = promise.new()
+    QBCore.Functions.TriggerCallback("groups:getGroupRequests", function(result)
+        request:resolve(result)
+    end, data.groupID)
+    local data = Citizen.Await(request)
+    cb(data)
 end)
