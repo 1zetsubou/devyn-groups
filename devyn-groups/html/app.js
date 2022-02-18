@@ -64,9 +64,7 @@ $(document).on('click', '.group-name', async function(e){
 });
 
 $(document).on('click', '.btn-requests', async function(e) {
-    let result = await $.post('https://devyn-groups/view-requests', JSON.stringify({groupID : $(this).data('groupID') }));
-
-    console.log(JSON.stringify(result));
+    let result = await $.post('https://devyn-groups/view-requests', JSON.stringify({groupID : $(this).parent().data('groupID') }));
 
     $.each(result, function(index, value) {
       let ele = `<div class="row group-row">
@@ -106,6 +104,7 @@ function createGroup(groupID, name) {
     $(".groups-group").fadeIn(200);
 
     $(".req-btn").fadeIn(200);
+    $('.req-btn').data('groupID', groupID);
 
 }
 
@@ -116,7 +115,7 @@ async function getActiveGroups() {
     console.log(JSON.stringify(result));
 
     $.each(result, function(index, value) {
-      let ele = `<div class="row group-row group-${value.id} group-name"><div><i class="fa-solid fa-user"></i> ${value.name}</div></div>`;
+      let ele = `<div class="row ripple group-row group-${value.id} group-name"><div><i class="fa-solid fa-user"></i> ${value.name}</div></div>`;
         $('.list-content').append(ele);
         $('.group-'+value.id).data('groupID', value.id);
     });

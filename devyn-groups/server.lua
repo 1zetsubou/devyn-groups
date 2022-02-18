@@ -34,12 +34,12 @@ QBCore.Functions.CreateCallback("groups:getActiveGroups", function(source, cb)
     cb(temp)
 end)
 
-QBCore.Functions.CreateCallback("groups:getGroupRequests", function(source, cb)
+QBCore.Functions.CreateCallback("groups:getGroupRequests", function(source, cb, groupID)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
 
     local temp = {}
-    for k,v in pairs(Requests) do
+    for k,v in pairs(Requests[groupID]) do
         table.insert(temp, {name = getPlayerName(v), id = v})
     end
     cb(temp)
@@ -66,9 +66,12 @@ end)
 
 QBCore.Functions.CreateCallback("groups:requestJoinGroup", function(source, cb, groupID)
     local src = source
-    if not Players[src] and not Requests[groupID][src] then
+    if not Players[src] and not Requests[groupID] then
         if Groups[groupID] then 
             if #Groups[groupID]["members"] < GroupLimit then
+                if Requests[groupID] == nil then 
+                    Requests[groupID] = {}
+                end
                 table.insert(Requests[groupID], src)
                 cb(true)
             else
@@ -88,3 +91,28 @@ function getPlayerName(src)
     local player = QBCore.Functions.GetPlayer(src)
     return player.PlayerData.charinfo.firstname.." "..player.PlayerData.charinfo.lastname
 end
+
+function getJobStatus(groupID)
+    return Groups[groupID]["status"]
+end
+exports('getJobStatus', getJobStatus)
+
+function setJobStatus(groupID, status)
+    Groups[groupID]["status"] = status
+end
+exports('setJobStatus', setJobStatus)
+
+function getGroupSize(groupID)
+    return #Groups[groupID]["members"]["helpers"] + 1
+end
+exports('getGroupSize', getGroupSize)
+
+function getGroupMembers(groupID)
+    local temp = {}
+    temp[#temp+1] = Groups[groupID]["leader"]
+    for k,v in pairs(Groups[groupID]["members"]["helpers"]) do
+        temp[#temp+1] = v
+    end
+    return temp    
+end
+exports('getGroupMembers', getGroupMembers)
