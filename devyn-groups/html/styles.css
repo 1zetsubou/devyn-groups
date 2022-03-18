@@ -1,3 +1,6 @@
+div#q-loading-bar { display: none!important; } /* makes sure there's no ajax load from quasar */
+::-webkit-scrollbar { display: none!important; } /* makes sure there's no ugly scrollbar on menu*/
+
 .groups-container {
     display: none;
     position: absolute;
@@ -12,68 +15,45 @@
     overflow-y: auto;
 }
 
-.groups-footer {
-    position: absolute; 
-    bottom: 0;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    margin: 0 auto;
-    padding-top: 50px;
+.groups-header {
+    text-align: center;
+    color: white;
+}
+
+.groups-icon {
+    left: 37%;
+    color: white !important;
 }
 
 .groups-main {
-    display: none;
     padding-top: 25px;
 }
 
 .groups-list {
-    display: none;
     padding-top: 25px;
 }
 
 .groups-requests {
-    display: none;
     padding-top: 25px;
-}
-
-.group-row {
-    text-align: center;
-    background-color: grey;
-    border-bottom: white 2px solid;
-    padding-bottom: 10px;
-    padding-top: 10px;
-}
-
-.group-row:hover {
-    background-color: #5f71fa;
 }
 
 .groups-group {
-    display: none;
     padding-top: 25px;
 }
 
-.main-row {
-    padding-top: 25px;
+.groups-members {
+    padding-top: 50px;
     text-align: center;
 }
 
-/* width */
-::-webkit-scrollbar {
-    width: 5px;
+.member {
+    padding-top: 25px;
+    padding-left: 170px;;
+    font-size: 25px;
+    color: white;
 }
-  
-/* Track */
-::-webkit-scrollbar-track {
-    background: #343a40; 
-}
-   
-/* Handle */
-::-webkit-scrollbar-thumb {
-    background: #1b36ff; 
-}
-  
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-    background: #2c44f8; 
+
+.member-name {
+    padding-left: 60px;
+    font-size: 20px;
 }

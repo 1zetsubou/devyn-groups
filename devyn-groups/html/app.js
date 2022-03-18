@@ -1,128 +1,183 @@
-let currentMenu = "main";
-window.addEventListener("message", function(event) {
-    const data = event.data;
-    const action = data.action;
+const { ref, onBeforeUnmount } = Vue
 
-    if (action == "open") {
-        if (data.menu == "main") {
-            currentMenu = "main";
-            $(".groups-main").fadeIn(5);
-        } else if (data.menu == "list") {
-            $(".groups-list").fadeIn(5);
-            currentMenu = "list";
-        } else if (data.menu == "group") {
-            $(".groups-group").fadeIn(5);
-            currentMenu = "group";
+
+const groups = {
+    data() {
+        return {
+            mainMenuShow: false,
+            listShow: false,
+            groupShow: false,
+            requestShow: false,
+            isInGroup: false,
+            isGroupLeader: false,
+            GroupMembers: [],
+            GroupTasks: [],
+            CurrentTask: "None",
+            GroupID : 0,
+            GroupList: [],
+            GroupRequests: [],
+        };
+    },
+    setup () {
+        return {
         }
-        $(".groups-container").fadeIn(500);
-    } else if (action == "group-create") {
-        createGroup(data.groupID, data.name);
-    }
-});
+    },
+    methods: {
+        CreateGroup: async function(event) {
+            let result = await $.post('https://devyn-groups/group-create');
+            if (result != false) {
+                this.HideMenus()
+                this.isInGroup = true
+                this.isGroupLeader = true
+                this.GroupMembers.push(result)
+                this.GroupID = result.groupID
+                this.groupShow = true 
+            } else {
+                console.log("Unable to create group");
+            }
+        },
+        AvailableGroups: async function(event) {
+            this.HideMenus()
+            let temp = []
+            let result = await $.post('https://devyn-groups/getActiveGroups');
+            $.each(result, function(index, value) {
+                temp.push(value)
+            });
+            this.GroupList = temp
+            this.listShow = true
+        },
+        RequestJoin: async function(id) {
+            let result = await $.post('https://devyn-groups/request-join', JSON.stringify({groupID : id }));
+            if (result) {
+                console.log("success")
+            } else {
+                console.log("fail")
+            }
+        },
+        LeaveGroup: function(event) {
+            if (this.isInGroup) {
+                this.HideMenus()
+                this.mainMenuShow = true
+                this.isInGroup = false
+                if (this.isGroupLeader) {
+                    this.isGroupLeader = false
+                    $.post('https://devyn-groups/group-destroy');
+                    
+                } else {
+                    $.post('https://devyn-groups/group-leave');
+                }
+                this.GroupCleanup()
+            }
+        },
+        MainMenu: function(event) {
+            this.HideMenus()
+            this.mainMenuShow = true
+        },
+        ViewGroup: function(event) {
+            this.HideMenus()
+            this.groupShow = true
+        },
+        ViewRequests: async function(event) {
+            
+            this.HideMenus()
+            let temp = []
+            let result = await $.post('https://devyn-groups/view-requests', JSON.stringify({groupID : this.GroupID }));
+            $.each(result, function(index, value) {
+                temp.push(value)
+            });
+            this.GroupRequests = temp
+            this.requestShow = true
+        },
+        RequestAccept: function(v, id) {
+            this.GroupRequests.splice(v, 1);
+            $.post('https://devyn-groups/request-accept', JSON.stringify({player : id, groupID : this.GroupID}));
+        },
+        RequestDeny: function(v, id) {
+            this.GroupRequests.splice(v, 1);
+            $.post('https://devyn-groups/request-deny', JSON.stringify({player : id, groupID : this.GroupID}));
+        },
+        MemberKick: function(v, id) {
+            this.GroupMembers.splice(v, 1);
+            $.post('https://devyn-groups/member-kick', JSON.stringify({player : id, groupID : this.GroupID}));
+        },
+        HideMenus: function() {
+            this.mainMenuShow = false
+            this.listShow = false
+            this.groupShow = false
+            this.requestShow = false
+        },
+        OpenMenu: function(data) {
+            if (!this.isInGroup) {
+                this.HideMenus()
+                this.mainMenuShow = true
+            } else {
+                this.HideMenus()
 
+                this.groupShow = true
+            }
+            $(".groups-container").fadeIn(150);
+        },
+        GetActiveGroups: async function() {
 
-// KEY AND CLICK EVENTS
+        },
+        JoinGroup: function(event) {
 
-$(document).on('click', '.btn-menu', function(e){
-    e.preventDefault();
-    $(".groups-"+currentMenu).fadeOut(0);
-    $(".groups-main").fadeIn(200);
-    currentMenu = "main";
-});
+        },
+        UpdateGroup: function(data, type) {
+            if (type == "join") {
+                this.HideMenus()
+                this.isInGroup = true
+                this.groupShow = true
+            } else if (type === "leave") {
 
-$(document).on('click', '.btn-requests', function(e){
-    e.preventDefault();
-    $(".groups-"+currentMenu).fadeOut(0);
-    $(".groups-requests").fadeIn(200);
-    currentMenu = "requests";
-});
+            } else if (type === "setTask") {
+                this.CurrentTask = data.task
+            } else if (type === "groupDestroy") {
+                this.HideMenus()
+                this.isInGroup = false
+                this.isGroupLeader = false 
+                this.GroupCleanup()
+            } else if (type === "update") {
+                this.GroupMembers = []
+                let temp = []
+                $.each(data, function(index, value) {
+                    temp.push(value)
+                });
+                this.GroupMembers = temp
+            }
+        },
+        GroupCleanup: function() {
+            this.GroupMembers = []
+            this.GroupTasks = []
+            this.CurrentTask = "None"
+            $.post('https://devyn-groups/group-cleanup');
+        },
+    },
+    destroyed() {
+        window.removeEventListener("message", this.listener);
+    },
+    mounted() {
+        this.listener = window.addEventListener("message", (event) => {
+            if (event.data.action === "open") {
+                this.OpenMenu(event.data);
+            } else if (event.data.action === "update") {
+                this.UpdateGroup(event.data.data, event.data.type);
+            }
+        });
+    },
+}
 
-$(document).on('click', '.btn-create', function(e){
-    e.preventDefault();
-    $(".groups-"+currentMenu).fadeOut(0);
-    $(".groups-group").fadeIn(200);
-    currentMenu = "group";
-    $.post('https://devyn-groups/group-create')
-});
+const app = Vue.createApp(groups);
+app.use(Quasar);
+app.mount(".groups-container");
 
-$(document).on('click', '.btn-join', function(e){
-    e.preventDefault();
-    $(".groups-"+currentMenu).fadeOut(0);
-    getActiveGroups();
-});
-
-$(document).on('click', '.group-name', async function(e){
-    e.preventDefault();
-
-    let result = await $.post('https://devyn-groups/request-join', JSON.stringify({groupID : $(this).data('groupID') }));
-    if (result) {
-        // handle UI
-        console.log("requested to join group");
-    } else {
-        console.log("Cannot join group");
-    }
-});
-
-$(document).on('click', '.btn-requests', async function(e) {
-    let result = await $.post('https://devyn-groups/view-requests', JSON.stringify({groupID : $(this).parent().data('groupID') }));
-
-    $.each(result, function(index, value) {
-      let ele = `<div class="row group-row">
-                    <div>
-                        <i class="fa-solid fa-user"></i><p class="group-request-name">${value.name}</p>
-                        <button type="button" class="btn btn-primary">Accept</button>
-                        <button type="button" class="btn btn-danger">Deny</button>
-                    </div>
-                </div>`;
-        $('.request-content').append(ele);
-        $('.group-'+value.id).data('groupID', value.id);
-    });
-
-    $(".groups-"+currentMenu).fadeOut(0);
-    $(".groups-requests").fadeIn(200);
-    currentMenu = "requests";
-});
-
-document.onkeyup = function (event) {
-    event = event || window.event;
-    if (event.key == "Escape") {
-        $(".groups-container").fadeOut(500);
-        $.post('https://devyn-groups/close'); 
-    }
+document.onkeyup = function (data) {
+    if (data.key == 'Escape') {
+        closeMenu()
+    } 
 };
-
-
-// FUNCTIONS
-
-function createGroup(groupID, name) {
-    console.log(groupID + " " + name);
-    let ele = `<div class="row group-row"><div><i class="fa-solid fa-user-shield"></i>${name}</div></div>`;
-    $('.group-content').append(ele);
-    $('.group-content').data('groupID', groupID);
-
-    $(".groups-"+currentMenu).fadeOut(0);
-    $(".groups-group").fadeIn(200);
-
-    $(".req-btn").fadeIn(200);
-    $('.req-btn').data('groupID', groupID);
-
-}
-
-
-async function getActiveGroups() {
-    let result = await $.post('https://devyn-groups/getActiveGroups');
-
-    console.log(JSON.stringify(result));
-
-    $.each(result, function(index, value) {
-      let ele = `<div class="row ripple group-row group-${value.id} group-name"><div><i class="fa-solid fa-user"></i> ${value.name}</div></div>`;
-        $('.list-content').append(ele);
-        $('.group-'+value.id).data('groupID', value.id);
-    });
-    $(".groups-list").fadeIn(200);
-    currentMenu = "list";
-}
-
-function joinGroup(groupID) {
-
+  
+function closeMenu() {
+    $(".groups-container").fadeOut(150);
+    $.post('https://devyn-groups/close');
 }
