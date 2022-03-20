@@ -46,13 +46,8 @@ const groups = {
             this.GroupList = temp
             this.listShow = true
         },
-        RequestJoin: async function(id) {
-            let result = await $.post('https://devyn-groups/request-join', JSON.stringify({groupID : id }));
-            if (result) {
-                console.log("success")
-            } else {
-                console.log("fail")
-            }
+        RequestJoin: function(id) {
+            $.post('https://devyn-groups/request-join', JSON.stringify({groupID : id }));
         },
         LeaveGroup: function(event) {
             if (this.isInGroup) {
@@ -64,7 +59,8 @@ const groups = {
                     $.post('https://devyn-groups/group-destroy');
                     
                 } else {
-                    $.post('https://devyn-groups/group-leave');
+                    console.log(this.GroupID)
+                    $.post('https://devyn-groups/group-leave', JSON.stringify({groupID : this.GroupID }));
                 }
                 this.GroupCleanup()
             }
@@ -120,15 +116,14 @@ const groups = {
         GetActiveGroups: async function() {
 
         },
-        JoinGroup: function(event) {
-
+        JoinGroup: function(data) {
+            this.HideMenus()
+            this.isInGroup = true
+            this.groupShow = true
+            this.GroupID = data.groupID
         },
         UpdateGroup: function(data, type) {
-            if (type == "join") {
-                this.HideMenus()
-                this.isInGroup = true
-                this.groupShow = true
-            } else if (type === "leave") {
+            if (type === "leave") {
 
             } else if (type === "setTask") {
                 this.CurrentTask = data.task
@@ -150,6 +145,7 @@ const groups = {
             this.GroupMembers = []
             this.GroupTasks = []
             this.CurrentTask = "None"
+            this.GroupID = 0
             $.post('https://devyn-groups/group-cleanup');
         },
     },
@@ -162,6 +158,8 @@ const groups = {
                 this.OpenMenu(event.data);
             } else if (event.data.action === "update") {
                 this.UpdateGroup(event.data.data, event.data.type);
+            } else if (event.data.action == "join") {
+                this.JoinGroup(event.data)
             }
         });
     },

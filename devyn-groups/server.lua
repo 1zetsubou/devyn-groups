@@ -14,13 +14,13 @@ QBCore.Functions.CreateCallback("groups:requestCreateGroup", function(source, cb
         Groups[#Groups+1] = {
             status="WAITING", 
             members={
-                leader = src, 
+                leader = src,
                 helpers= {},
             }
         }
         cb({ groupID = #Groups, name = getPlayerName(src), id = src })
     else
-        print("src already in a group")
+        TriggerClientEvent("QBCore:Notify", src, "You are already in a group", "error")
         cb(false)
     end
 end)
@@ -62,14 +62,14 @@ QBCore.Functions.CreateCallback("groups:requestJoinGroup", function(source, cb, 
                 table.insert(Requests[groupID], src)
                 cb(true)
             else
-                print("group full")
+                TriggerClientEvent("QBCore:Notify", src, "The group is full", "error")
             end
         else 
-            print("group doesn't exist")
+            TriggerClientEvent("QBCore:Notify", src, "That group doesn't exist", "error")
         end
         cb(true)
     else
-        print("In Group or Request Pending")
+        TriggerClientEvent("QBCore:Notify", src, "You already have a request pending", "error")
         cb(false)
     end
 end)
@@ -83,7 +83,7 @@ RegisterNetEvent("groups:acceptRequest", function(player, groupID)
             end
         end
         TriggerClientEvent("QBCore:Notify", player, "Your group join request was accepted", "success")
-        TriggerClientEvent("groups:JoinGroup", player)
+        TriggerClientEvent("groups:JoinGroup", player, groupID)
     end
 end)
 
@@ -112,10 +112,9 @@ QBCore.Functions.CreateCallback("groups:getGroupMembers", function(source, cb, g
     cb(temp)
 end)
 
-
-RegisterServerEvent("groups:leaveGroup", function()
+RegisterServerEvent("groups:leaveGroup", function(groupID)
     local src = source
-    local g = findGroupByMember(src)
+    RemovePlayerFromGroup(src, groupID)
 end)
 
 RegisterServerEvent("groups:destroyGroup", function()
@@ -130,7 +129,7 @@ RegisterServerEvent("groups:destroyGroup", function()
         end
         Groups[g] = nil
     else 
-        print("Unable to destory group as it doesn't exsist.")
+        print("Unable to destory group as it doesn't exist.")
     end
 end)
 
@@ -143,7 +142,7 @@ function AddPlayerToGroup(player, groupID)
             UpdateGroupData(groupID)
             return true
         else
-            print("Group doesn't exsist")
+            print("Group doesn't exist")
         end
     else
         print("Player is already in a group")
@@ -152,16 +151,16 @@ function AddPlayerToGroup(player, groupID)
 end
 
 function RemovePlayerFromGroup(player, groupID)
-
     if Players[player] then 
-        if Groups[groupID] then 
-            Players[player] = nil
+        if Groups[groupID] then
             local g = Groups[groupID]["members"]["helpers"]
             for k,v in pairs(g) do 
                 if v == player then
                     Groups[groupID]["members"]["helpers"][k] = nil
+                    Players[player] = nil
                 end
             end
+            TriggerClientEvent("QBCore:Notify", player, "You have left the group", "primary")
             UpdateGroupData(groupID)
         end 
     end
@@ -193,6 +192,7 @@ function removeGroupMembers(groupID)
     local g = Groups[groupID]
     for i=1, #g["members"]["helpers"] do 
         Players[g["members"]["helpers"][i]] = nil
+        Groups[groupID]["members"]["helpers"][i] = nil
     end
     Players[g["members"]["leader"]] = nil
 end

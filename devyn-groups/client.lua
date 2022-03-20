@@ -8,7 +8,11 @@ end
 
 
 RegisterNetEvent("groups:updateJobStage", function(data)
-
+    SendNUIMessage({ 
+        action = "update",
+        type = "setTask",
+        stage = data.stage,
+    })
 end)
 
 RegisterNetEvent("groups:UpdateGroupData", function(data)
@@ -19,10 +23,10 @@ RegisterNetEvent("groups:UpdateGroupData", function(data)
     })
 end)
 
-RegisterNetEvent("groups:JoinGroup", function(data)
+RegisterNetEvent("groups:JoinGroup", function(id)
     SendNUIMessage({ 
-        action = "update",
-        type = "join",
+        action = "join",
+        groupID = id,
     })
 end)
 
@@ -59,12 +63,16 @@ RegisterNUICallback('request-join', function(data, cb)
             request:resolve(result)
         end, data.groupID)
         local data = Citizen.Await(request)
-        cb(data)
+        if request then 
+            QBCore.Functions.Notify("Join request sent", "success")
+        else 
+            QBCore.Functions.Notify("You cannot do that yet", "error")
+        end
         requestCooldown = true
         Wait(5000)
         requestCooldown = false
     else 
-        QBCore.Functions.Notify("You need to wait before requesting againn", "error")
+        QBCore.Functions.Notify("You need to wait before requesting again", "error")
     end
 end)
 
@@ -89,8 +97,8 @@ RegisterNUICallback('member-kick', function(data)
     TriggerServerEvent("groups:kickMember", data.player, data.groupID)
 end)
 
-RegisterNUICallback('group-leave', function()
-    
+RegisterNUICallback('group-leave', function(data)
+    TriggerServerEvent("groups:leaveGroup", data.groupID)
 end)
 
 RegisterNUICallback('group-destroy', function()
