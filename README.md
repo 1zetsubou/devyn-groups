@@ -2,6 +2,13 @@
 This script is used as a tool to create and get data for player groups.
 There are no jobs or anything included with these files.
 
+## UI:
+![image](https://user-images.githubusercontent.com/7463741/162239943-d7205577-1974-41b8-a8bc-7b67a82d4dad.png)
+
+![image](https://user-images.githubusercontent.com/7463741/162240030-5f4fd63e-2137-48fc-bfcb-258076f087fb.png)
+
+
+
 ## Exports:
 
 ### Client Side
